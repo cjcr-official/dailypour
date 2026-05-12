@@ -15,8 +15,10 @@ import {
   BookOpen,
   Trash2,
   LogOut,
+  Navigation,
+  ExternalLink,
 } from "lucide-react";
-import { COFFEES, SHOPS } from "./data.js";
+import { COFFEES, FLAVORS, SHOPS } from "./data.js";
 import { supabase, hasSupabase } from "./supabase.js";
 import Login from "./Login.jsx";
 
@@ -96,6 +98,9 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [tab, setTab] = useState("brew");
   const [current, setCurrent] = useState(null);
+  const [currentFlavor, setCurrentFlavor] = useState(null);
+  const [flavorMode, setFlavorMode] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [showRecipe, setShowRecipe] = useState(false);
   const [favorites, setFavorites] = useState([]);
@@ -144,15 +149,39 @@ export default function App() {
   }, []);
 
   const spin = () => {
+    // Build the pool: either favorites (looked up against full COFFEES list)
+    // or the full COFFEES list.
+    const pool = favoritesOnly
+      ? favorites
+          .map((f) => COFFEES.find((c) => c.name === f.name))
+          .filter(Boolean)
+      : COFFEES;
+
+    if (pool.length === 0) {
+      showToast("No favorites yet — turn it off or save some first");
+      return;
+    }
+
     setSpinning(true);
     setShowRecipe(false);
     let count = 0;
+    // If the pool is tiny (like 1-2 items), the rapid-cycle visual is
+    // pointless — cap cycle count so it still feels snappy.
+    const maxCount = pool.length === 1 ? 4 : 14;
     const interval = setInterval(() => {
-      setCurrent(COFFEES[Math.floor(Math.random() * COFFEES.length)]);
+      setCurrent(pool[Math.floor(Math.random() * pool.length)]);
+      if (flavorMode) {
+        setCurrentFlavor(FLAVORS[Math.floor(Math.random() * FLAVORS.length)]);
+      }
       count++;
-      if (count > 14) {
+      if (count > maxCount) {
         clearInterval(interval);
-        setCurrent(COFFEES[Math.floor(Math.random() * COFFEES.length)]);
+        setCurrent(pool[Math.floor(Math.random() * pool.length)]);
+        if (flavorMode) {
+          setCurrentFlavor(FLAVORS[Math.floor(Math.random() * FLAVORS.length)]);
+        } else {
+          setCurrentFlavor(null);
+        }
         setSpinning(false);
       }
     }, 80);
@@ -166,19 +195,29 @@ export default function App() {
   const recordBuy = async () => {
     if (!current) return;
     const key = todayKey();
-    const entry = { name: current.name, emoji: current.emoji, color: current.color };
+    const displayName = currentFlavor
+      ? `${currentFlavor.name} ${current.name}`
+      : current.name;
+    const entry = {
+      name: displayName,
+      emoji: current.emoji,
+      color: current.color,
+    };
     setOrderLog((prev) => ({ ...prev, [key]: entry }));
     if (hasSupabase() && userId) {
-      await upsertOrder(userId, key, current);
+      await upsertOrder(userId, key, { ...current, name: displayName });
     } else {
       const cur = JSON.parse(localStorage.getItem("orderLog") || "{}");
       cur[key] = entry;
       localStorage.setItem("orderLog", JSON.stringify(cur));
     }
-    showToast(`✓ Logged ${current.name}`);
+    showToast(`✓ Logged ${displayName}`);
   };
 
-  const passOnIt = () => showToast("No worries — try again");
+  const passOnIt = () => {
+    showToast("Trying again…");
+    spin();
+  };
 
   const toggleFavorite = async (coffee) => {
     const exists = favorites.find((f) => f.name === coffee.name);
@@ -283,6 +322,12 @@ export default function App() {
           {tab === "brew" && (
             <BrewTab
               current={current}
+              currentFlavor={currentFlavor}
+              flavorMode={flavorMode}
+              setFlavorMode={setFlavorMode}
+              favoritesOnly={favoritesOnly}
+              setFavoritesOnly={setFavoritesOnly}
+              favoritesCount={favorites.length}
               spinning={spinning}
               showRecipe={showRecipe}
               isFav={!!isFav}
@@ -337,6 +382,12 @@ export default function App() {
 
 function BrewTab({
   current,
+  currentFlavor,
+  flavorMode,
+  setFlavorMode,
+  favoritesOnly,
+  setFavoritesOnly,
+  favoritesCount,
   spinning,
   showRecipe,
   isFav,
@@ -352,6 +403,38 @@ function BrewTab({
       <h2 className="section-title">what shall it be?</h2>
       <p className="section-sub">let the universe decide your caffeine fate.</p>
 
+      <div className="toggles">
+        <label className="flavor-toggle">
+          <input
+            type="checkbox"
+            checked={favoritesOnly}
+            onChange={(e) => setFavoritesOnly(e.target.checked)}
+          />
+          <span className="flavor-toggle-track">
+            <span className="flavor-toggle-thumb" />
+          </span>
+          <span className="flavor-toggle-label">
+            {favoritesOnly
+              ? `from your favorites (${favoritesCount})`
+              : "from favorites only"}
+          </span>
+        </label>
+
+        <label className="flavor-toggle">
+          <input
+            type="checkbox"
+            checked={flavorMode}
+            onChange={(e) => setFlavorMode(e.target.checked)}
+          />
+          <span className="flavor-toggle-track">
+            <span className="flavor-toggle-thumb" />
+          </span>
+          <span className="flavor-toggle-label">
+            {flavorMode ? "with a random flavor" : "add a random flavor"}
+          </span>
+        </label>
+      </div>
+
       <button onClick={spin} disabled={spinning} className="spin-btn">
         <Sparkles size={16} strokeWidth={1.7} />
         <span>
@@ -365,7 +448,19 @@ function BrewTab({
 
       {current && (
         <div className="coffee-card">
-          <div className="coffee-emoji">{current.emoji}</div>
+          <div className="coffee-image-wrap">
+            <img
+              src={current.image}
+              alt={current.name}
+              className="coffee-image"
+              loading="lazy"
+              onError={(e) => {
+                e.target.style.display = "none";
+              }}
+            />
+            <div className="coffee-emoji-badge">{current.emoji}</div>
+          </div>
+
           <div className="coffee-name-row">
             <h3 className="coffee-name" style={{ color: current.color }}>
               {current.name}
@@ -383,6 +478,16 @@ function BrewTab({
               />
             </button>
           </div>
+
+          {currentFlavor && !spinning && (
+            <div className="flavor-chip">
+              <span className="flavor-chip-emoji">{currentFlavor.emoji}</span>
+              <span className="flavor-chip-label">
+                with {currentFlavor.name.toLowerCase()}
+              </span>
+            </div>
+          )}
+
           <p className="coffee-desc">{current.description}</p>
 
           {!spinning && (
@@ -481,11 +586,66 @@ function FavoritesTab({ favorites, toggleFavorite }) {
 // ---------- Shops tab ----------
 
 function ShopsTab() {
+  const [locating, setLocating] = React.useState(false);
+  const [locationError, setLocationError] = React.useState(null);
+
+  const searchNearMe = () => {
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      // Fallback: just open Google Maps search
+      window.open(
+        "https://www.google.com/maps/search/coffee+shops+near+me",
+        "_blank"
+      );
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const url = `https://www.google.com/maps/search/coffee+shops/@${latitude},${longitude},14z`;
+        window.open(url, "_blank");
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        // If user denied, still let them search without coords
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationError(
+            "Location blocked — opening a general search instead."
+          );
+          setTimeout(() => {
+            window.open(
+              "https://www.google.com/maps/search/coffee+shops+near+me",
+              "_blank"
+            );
+            setLocationError(null);
+          }, 1500);
+        } else {
+          setLocationError("Couldn't get your location. Try again?");
+        }
+      },
+      { timeout: 8000, enableHighAccuracy: false }
+    );
+  };
+
+  const openInMaps = (address) => {
+    const q = encodeURIComponent(address);
+    window.open(`https://www.google.com/maps/search/${q}`, "_blank");
+  };
+
   return (
     <div>
       <div className="section-eyebrow">— local roasters —</div>
       <h2 className="section-title">around the falls</h2>
       <p className="section-sub">spots worth a stop, ranked by the locals.</p>
+
+      <button onClick={searchNearMe} disabled={locating} className="near-me-btn">
+        <Navigation size={15} strokeWidth={1.7} />
+        <span>{locating ? "finding you…" : "search near me"}</span>
+      </button>
+      {locationError && <div className="near-me-error">{locationError}</div>}
+
       <div className="shop-list">
         {SHOPS.map((s, i) => (
           <div key={s.name} className="shop-card">
@@ -499,19 +659,24 @@ function ShopsTab() {
                 </div>
               </div>
               <div className="shop-meta">
-                <div className="shop-row">
+                <button
+                  onClick={() => openInMaps(s.address)}
+                  className="shop-row shop-row-link"
+                  aria-label="Open in Maps"
+                >
                   <MapPin size={11} strokeWidth={1.6} />
                   <span>{s.address}</span>
-                </div>
+                  <ExternalLink size={9} strokeWidth={1.7} style={{ marginLeft: 2, opacity: 0.6 }} />
+                </button>
                 <div className="shop-row">
                   <Clock size={11} strokeWidth={1.6} />
                   <span>{s.hours}</span>
                 </div>
                 {s.phone && (
-                  <div className="shop-row">
+                  <a className="shop-row shop-row-link" href={`tel:${s.phone.replace(/[^0-9]/g, "")}`}>
                     <Phone size={11} strokeWidth={1.6} />
                     <span>{s.phone}</span>
-                  </div>
+                  </a>
                 )}
               </div>
               <p className="shop-note">"{s.note}"</p>

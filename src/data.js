@@ -1,11 +1,16 @@
 // All the coffees the roulette can pick from, plus local shops.
-// Colors are tuned to the neutral / coffee palette (cream, tan, taupe, charcoal).
+// Images are from Unsplash (free, no API key needed). They're sized to be small
+// for fast loading on mobile.
+
+const IMG = (id) =>
+  `https://images.unsplash.com/photo-${id}?w=600&q=70&auto=format&fit=crop`;
 
 export const COFFEES = [
   {
     name: "Espresso",
     emoji: "☕",
     color: "#3d2817",
+    image: IMG("1510707577719-ae7c14805e3a"),
     description: "Pure, concentrated, no nonsense.",
     recipe: [
       "Grind 18g of dark-roast beans fine, like table salt.",
@@ -18,6 +23,7 @@ export const COFFEES = [
     name: "Americano",
     emoji: "🖤",
     color: "#4a3525",
+    image: IMG("1521302200778-33500795e128"),
     description: "Espresso loosened with hot water. Long and contemplative.",
     recipe: [
       "Pull a double shot of espresso (~36g).",
@@ -30,6 +36,7 @@ export const COFFEES = [
     name: "Cappuccino",
     emoji: "🫧",
     color: "#8b6f4e",
+    image: IMG("1517701604599-bb29b565090c"),
     description: "One-third espresso, one-third milk, one-third foam.",
     recipe: [
       "Pull a double shot of espresso into a 6 oz cup.",
@@ -42,6 +49,7 @@ export const COFFEES = [
     name: "Latte",
     emoji: "🥛",
     color: "#b8967a",
+    image: IMG("1593443320739-77f74939d0da"),
     description: "Espresso swimming in silky steamed milk.",
     recipe: [
       "Pull a double shot of espresso into a 12 oz cup.",
@@ -54,6 +62,7 @@ export const COFFEES = [
     name: "Flat White",
     emoji: "⚪",
     color: "#a08469",
+    image: IMG("1572442388796-11668a67e53d"),
     description: "Australian classic. Stronger ratio, velvety microfoam.",
     recipe: [
       "Pull a ristretto double shot (~30g out, intense and sweet).",
@@ -66,6 +75,7 @@ export const COFFEES = [
     name: "Mocha",
     emoji: "🍫",
     color: "#5a3a25",
+    image: IMG("1578374173705-969cbe6f2d6b"),
     description: "Espresso, chocolate, milk. The pastry of drinks.",
     recipe: [
       "Add 2 tbsp of chocolate syrup or melted ganache to the cup.",
@@ -78,6 +88,7 @@ export const COFFEES = [
     name: "Macchiato",
     emoji: "🎯",
     color: "#6b4a30",
+    image: IMG("1485808191679-5f86510681a2"),
     description: "Espresso 'marked' with a dollop of foam.",
     recipe: [
       "Pull a double shot of espresso into a small cup.",
@@ -90,6 +101,7 @@ export const COFFEES = [
     name: "Cortado",
     emoji: "🥃",
     color: "#8a6646",
+    image: IMG("1497935586351-b67a49e012bf"),
     description: "Equal parts espresso and warm milk. Balanced.",
     recipe: [
       "Pull a double shot of espresso into a 4 oz glass.",
@@ -102,6 +114,7 @@ export const COFFEES = [
     name: "Cold Brew",
     emoji: "🧊",
     color: "#2d1a0c",
+    image: IMG("1517959105821-eaf2591984ca"),
     description: "Slow-steeped, smooth, low-acid.",
     recipe: [
       "Coarsely grind 1 cup of beans (like sea salt).",
@@ -114,6 +127,7 @@ export const COFFEES = [
     name: "Iced Latte",
     emoji: "🧋",
     color: "#c9a987",
+    image: IMG("1461023058943-07fcbe16d735"),
     description: "Espresso, cold milk, ice. Infinitely repeatable.",
     recipe: [
       "Pull a double shot of espresso into a 16 oz glass.",
@@ -123,9 +137,23 @@ export const COFFEES = [
     ],
   },
   {
+    name: "Frappe",
+    emoji: "🥤",
+    color: "#6b4a35",
+    image: IMG("1572490122747-3968b75cc699"),
+    description: "Blended ice and espresso. Thick, frothy, indulgent.",
+    recipe: [
+      "Brew a strong double shot of espresso and chill it.",
+      "Add to a blender with 1 cup of ice, 6 oz of milk, and 2 tbsp sugar.",
+      "Blend on high for 30 seconds until thick and frothy.",
+      "Pour into a tall glass, top with whipped cream and a drizzle of syrup.",
+    ],
+  },
+  {
     name: "Affogato",
     emoji: "🍨",
     color: "#4d3320",
+    image: IMG("1568901346375-23c9450c58cd"),
     description: "Vanilla gelato 'drowned' in hot espresso.",
     recipe: [
       "Scoop a generous ball of vanilla gelato into a chilled cup.",
@@ -138,6 +166,7 @@ export const COFFEES = [
     name: "Pour Over",
     emoji: "🌊",
     color: "#6e4a30",
+    image: IMG("1495474472287-4d71bcdd2085"),
     description: "A meditative, clean cup.",
     recipe: [
       "Grind 22g of beans to medium-coarse (like kosher salt).",
@@ -150,6 +179,7 @@ export const COFFEES = [
     name: "Chai Latte",
     emoji: "🍵",
     color: "#b3814b",
+    image: IMG("1597481499750-3e6b22637e12"),
     description: "Spiced black tea with steamed milk. Cozy in a cup.",
     recipe: [
       "Brew a concentrate: 2 black tea bags + cardamom, cinnamon, ginger, cloves in 4 oz water.",
@@ -162,6 +192,7 @@ export const COFFEES = [
     name: "Dirty Chai",
     emoji: "🌶️",
     color: "#8e5a30",
+    image: IMG("1542990253-0d0f5be5f0ed"),
     description: "Chai latte with a shot of espresso.",
     recipe: [
       "Make a chai latte (or use a quality chai concentrate).",
@@ -174,6 +205,7 @@ export const COFFEES = [
     name: "Vienna Coffee",
     emoji: "🎼",
     color: "#4a2e1a",
+    image: IMG("1514432324607-a09d9b4aefdd"),
     description: "Strong black coffee crowned with whipped cream.",
     recipe: [
       "Brew 8 oz of strong drip or French press coffee.",
@@ -186,6 +218,7 @@ export const COFFEES = [
     name: "Turkish Coffee",
     emoji: "🫖",
     color: "#2a160a",
+    image: IMG("1606101206868-67d0a9ec1ddc"),
     description: "Unfiltered, fine-ground, simmered in a cezve.",
     recipe: [
       "Grind beans to a powder, finer than espresso.",
@@ -194,6 +227,29 @@ export const COFFEES = [
       "Pour foam first into the cup, then the rest. Let grounds settle.",
     ],
   },
+];
+
+// Optional flavor add-ons. The roulette can mix one of these in if "with flavor"
+// is toggled on. Some pair better than others, but the universe decides.
+export const FLAVORS = [
+  { name: "Vanilla", emoji: "🌼" },
+  { name: "Caramel", emoji: "🍯" },
+  { name: "Hazelnut", emoji: "🌰" },
+  { name: "Cinnamon", emoji: "🍂" },
+  { name: "Lavender", emoji: "💜" },
+  { name: "Brown Sugar", emoji: "🤎" },
+  { name: "Honey", emoji: "🐝" },
+  { name: "Coconut", emoji: "🥥" },
+  { name: "Maple", emoji: "🍁" },
+  { name: "Pumpkin Spice", emoji: "🎃" },
+  { name: "Toasted Marshmallow", emoji: "🔥" },
+  { name: "Salted Caramel", emoji: "🧂" },
+  { name: "White Chocolate", emoji: "🤍" },
+  { name: "Peppermint", emoji: "🌿" },
+  { name: "Almond", emoji: "🥜" },
+  { name: "Rose", emoji: "🌹" },
+  { name: "Cardamom", emoji: "🪻" },
+  { name: "Lemon", emoji: "🍋" },
 ];
 
 export const SHOPS = [
